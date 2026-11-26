@@ -66,7 +66,7 @@
       type: 'image',
       name: 'Egyptian King',
       model: 'slim',
-      tags: ['Built-in', 'Custom PNG'],
+      tags: ['Built-in'],
       src: 'images/egyptianking.png' // Put your .png file path or data:image/png;base64,... here
     },
         ,{
@@ -74,7 +74,7 @@
       type: 'image',
       name: 'Steve',
       model: 'classic',
-      tags: ['Built-in', 'Custom PNG'],
+      tags: ['Built-in'],
       src: 'skins/steve.png' // Put your .png file path or data:image/png;base64,... here
     },
         ,{
@@ -82,7 +82,7 @@
       type: 'image',
       name: 'Herobrine',
       model: 'classic',
-      tags: ['Built-in', 'Custom PNG'],
+      tags: ['Built-in'],
       src: 'skins/herobrine.png' // Put your .png file path or data:image/png;base64,... here
     },
     // {
