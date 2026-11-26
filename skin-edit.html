@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Craftvora Studio — 3D &amp; 2D Skin Editor</title>
+  <script src="theme.js"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="script.js"></script>
+  <style>
+    .editor-workspace {
+      display: grid;
+      grid-template-columns: 280px 1fr 340px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .tool-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 10px 6px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.14s ease, background-color 0.15s ease, color 0.15s ease;
+    }
+
+    .tool-btn i {
+      font-size: 16px;
+    }
+
+    .tool-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--border-strong);
+    }
+
+    .tool-btn.active {
+      background: var(--accent-forest);
+      color: var(--accent-forest-text);
+      border-color: transparent;
+    }
+
+    .swatch-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+    }
+
+    .swatch {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      border: 2px solid var(--border-color);
+      cursor: pointer;
+      transition: transform 0.12s ease;
+    }
+
+    .swatch:hover {
+      transform: scale(1.1);
+    }
+
+    .canvas-stage-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .pixel-viewport {
+      width: 100%;
+      aspect-ratio: 1;
+      max-height: 540px;
+      background-color: var(--bg-subtle);
+      background-image: linear-gradient(45deg, rgba(128, 128, 128, 0.14) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(128, 128, 128, 0.14) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(128, 128, 128, 0.14) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(128, 128, 128, 0.14) 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      touch-action: none;
+      position: relative;
+    }
+
+    #skin2dCanvas {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+      cursor: crosshair;
+    }
+
+    .viewport-3d-box {
+      width: 100%;
+      height: 330px;
+      background: radial-gradient(circle at 50% 35%, var(--bg-surface), var(--bg-subtle));
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      position: relative;
+      overflow: hidden;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .viewport-3d-box:active {
+      cursor: grabbing;
+    }
+
+    #skin3dCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .body-toggle-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .part-toggle {
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.14s ease;
+    }
+
+    .part-toggle.on {
+      background: var(--badge-green-bg);
+      color: var(--badge-green-text);
+      border-color: transparent;
+    }
+
+    .shortcut-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 13.5px;
+    }
+
+    .shortcut-row:last-child {
+      border-bottom: none;
+    }
+
+    .mobile-view-tabs {
+      display: none;
+    }
+
+    @media (max-width: 1080px) {
+      .editor-workspace {
+        grid-template-columns: 1fr 1fr;
+      }
+      .tools-column {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .editor-workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .mobile-view-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        background: var(--bg-surface);
+        padding: 4px;
+        border-radius: var(--radius-pill);
+        border: 1px solid var(--border-color);
+        margin-bottom: 12px;
+      }
+
+      .mobile-view-tab {
+        border: none;
+        background: transparent;
+        padding: 8px;
+        border-radius: var(--radius-pill);
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .mobile-view-tab.active {
+        background: var(--accent-forest);
+        color: var(--accent-forest-text);
+      }
+
+      .mobile-hidden {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a href="dashboard.html" class="brand">
+      <span class="brand-badge"><i class="fa-solid fa-cube"></i></span>
+      <span>Craftvora</span>
+    </a>
+
+    <nav class="nav-pills" aria-label="Primary">
+      <a href="dashboard.html" class="nav-pill"><i class="ri-dashboard-line"></i> Dashboard</a>
+      <a href="library.html" class="nav-pill"><i class="ri-stack-line"></i> Library</a>
+      <a href="skin-edit.html" class="nav-pill active"><i class="ph-bold ph-paint-brush"></i> Skin Studio</a>
+    </nav>
+
+    <div class="topbar-actions">
+      <button type="button" class="icon-circle-btn" id="openShortcutsBtn" title="Keyboard Shortcuts (?)" aria-label="Keyboard Shortcuts">
+        <i class="ri-keyboard-box-line"></i>
+      </button>
+
+      <div class="theme-dropdown-wrap">
+        <button type="button" class="icon-circle-btn" id="themeDropdownTrigger" aria-label="Switch Theme" title="Appearance">
+          <i id="navThemeCurrentIcon" class="ri-contrast-2-line"></i>
+        </button>
+        <div class="theme-dropdown-menu" id="themeDropdownMenu" role="menu">
+          <div class="theme-menu-header">Appearance</div>
+          <button type="button" class="theme-menu-item" data-theme-option="light">
+            <span><i class="ph-bold ph-sun"></i> Light</span>
+            <i class="ri-check-line check-mark"></i>
+          </button>
+          <button type="button" class="theme-menu-item" data-theme-option="dark">
+            <span><i class="ph-bold ph-moon-stars"></i> Dark </span>
+            <i class="ri-check-line check-mark"></i>
+          </button>
+          <button type="button" class="theme-menu-item" data-theme-option="system">
+            <span><i class="ri-contrast-2-line"></i> System Default</span>
+            <i class="ri-check-line check-mark"></i>
+          </button>
+        </div>
+      </div>
+
+      <a href="settings.html" class="icon-circle-btn" aria-label="Studio Settings" title="Settings">
+        <i class="ri-settings-3-line"></i>
+      </a>
+    </div>
+  </header>
+
+  <main class="app-container">
+    <div class="breadcrumb">
+      <a href="library.html">Library</a>
+      <i class="ri-arrow-right-s-line"></i>
+      <span>3D / 2D Editor</span>
+    </div>
+
+    <div class="page-header">
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <input type="text" id="editorSkinName" class="input" style="font-size: 19px; font-weight: 700; width: 225px; padding: 6px 12px;" value="Emerald Warden" />
+        <select id="editorModelSelect" class="select" style="width: auto; padding: 7px 12px;">
+          <option value="classic">Classic (4px)</option>
+          <option value="slim">Slim (3px)</option>
+        </select>
+        <button type="button" class="btn btn-lime btn-sm" id="editorNewSkinBtn" title="Create Brand-New Skin (Ctrl+N)">
+          <i class="ri-add-line"></i> New Skin
+        </button>
+      </div>
+
+      <div class="header-controls">
+        <button type="button" class="btn btn-sm" id="undoBtn" title="Undo (Ctrl+Z)"><i class="ri-arrow-go-back-line"></i> Undo</button>
+        <button type="button" class="btn btn-sm" id="redoBtn" title="Redo (Ctrl+Y)"><i class="ri-arrow-go-forward-line"></i> Redo</button>
+        <button type="button" class="btn btn-sm" id="editorIoBtn"><i class="ri-arrow-up-down-line"></i> Import / Export</button>
+        <button type="button" class="btn btn-primary btn-sm" id="saveLibraryBtn" title="Save (Ctrl+S)"><i class="ri-check-line"></i> Save</button>
+      </div>
+    </div>
+
+    <!-- Mobile 2D / 3D Switcher -->
+    <div class="mobile-view-tabs">
+      <button type="button" class="mobile-view-tab active" data-pane="2d"><i class="ri-grid-line"></i> 2D Pixel Paint</button>
+      <button type="button" class="mobile-view-tab" data-pane="3d"><i class="fa-solid fa-cube"></i> 3D Model View</button>
+    </div>
+
+    <section class="editor-workspace">
+      <!-- Left Column: Brushes, Smart Pixel Tools & Swatches -->
+      <aside class="card tools-column">
+        <div class="card-header" style="margin-bottom: 10px;">
+          <span class="card-title"><i class="ph-bold ph-toolbox"></i> Tools</span>
+          <span class="badge" id="cursorCoords">X:0 Y:0</span>
+        </div>
+
+        <div class="tool-grid" style="margin-bottom: 14px;">
+          <button type="button" class="tool-btn active" data-tool="pencil" title="Pencil (B)">
+            <i class="ph-bold ph-pencil-simple"></i><span>Pencil</span>
+          </button>
+          <button type="button" class="tool-btn" data-tool="eraser" title="Eraser (E)">
+            <i class="ph-bold ph-eraser"></i><span>Eraser</span>
+          </button>
+          <button type="button" class="tool-btn" data-tool="fill" title="Bucket Fill (G)">
+            <i class="ph-bold ph-paint-bucket"></i><span>Fill</span>
+          </button>
+          <button type="button" class="tool-btn" data-tool="picker" title="Eyedropper (I)">
+            <i class="ph-bold ph-eyedropper"></i><span>Picker</span>
+          </button>
+          <button type="button" class="tool-btn" data-tool="shade" title="Auto Shade / Noise (S)">
+            <i class="ph-bold ph-sparkle"></i><span>Shade</span>
+          </button>
+          <button type="button" class="tool-btn" id="mirrorToggleBtn" title="Mirror Symmetry (M)">
+            <i class="ri-flip-horizontal-line"></i><span>Mirror</span>
+          </button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px;">
+          <button type="button" class="btn btn-sm" id="flipHorizontalBtn" title="Flip Texture Horizontally">
+            <i class="ri-swap-line"></i> Flip X
+          </button>
+          <button type="button" class="btn btn-sm" id="gridToggleBtn" title="Toggle Grid (#)">
+            <i class="ri-grid-line"></i> Grid: On
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="colorPickerInput">Active Color</label>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="color" id="colorPickerInput" value="#30d158" style="width: 46px; height: 38px; border: none; background: transparent; cursor: pointer;" />
+            <input type="text" id="colorHexInput" class="input" value="#30d158" style="font-family: var(--font-mono);" />
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label class="form-label">Studio Swatches</label>
+            <span class="card-subtitle">Keys 1&ndash;9</span>
+          </div>
+          <div class="swatch-grid" id="swatchGrid"></div>
+        </div>
+      </aside>
+
+      <!-- Center Column: 2D 64x64 UV Texture Editor -->
+      <div class="card canvas-stage-card" id="pane2d">
+        <div class="card-header" style="margin-bottom: 0;">
+          <div>
+            <div class="card-title"><i class="ri-artboard-line"></i> 2D Texture Map (64&times;64)</div>
+            <div class="card-subtitle" id="uvPartLabel">Hover or tap any pixel to paint</div>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button type="button" class="btn btn-sm" id="uvGuidesBtn">UV Guides: On</button>
+          </div>
+        </div>
+
+        <div class="pixel-viewport">
+          <canvas id="skin2dCanvas" width="512" height="512"></canvas>
+        </div>
+      </div>
+
+      <!-- Right Column: Interactive 3D Character Preview -->
+      <aside class="card" id="pane3d">
+        <div class="card-header" style="margin-bottom: 10px;">
+          <div>
+            <div class="card-title"><i class="fa-solid fa-cube"></i> Live 3D Preview</div>
+            <div class="card-subtitle">Drag to rotate &middot; Scroll to zoom</div>
+          </div>
+          <select id="poseSelect" class="select" style="width: auto; padding: 5px 10px; font-size: 12px;">
+            <option value="walk">Pose: Walk</option>
+            <option value="idle">Pose: Idle</option>
+            <option value="wave">Pose: Wave</option>
+          </select>
+        </div>
+
+        <div class="viewport-3d-box" id="viewport3d">
+          <canvas id="skin3dCanvas" width="320" height="330"></canvas>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+          <i class="ri-zoom-out-line" style="color: var(--text-muted);"></i>
+          <input type="range" id="zoom3dSlider" min="0.65" max="1.75" step="0.05" value="1.05" style="flex: 1; accent-color: var(--accent-forest);" />
+          <i class="ri-zoom-in-line" style="color: var(--text-muted);"></i>
+          <button type="button" class="btn btn-sm" id="resetCamBtn" title="Reset Camera">Reset</button>
+        </div>
+
+        <div style="margin-top: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span class="form-label" style="margin: 0;">Body Parts &amp; 2nd Overlay Layer</span>
+            <button type="button" class="btn btn-sm" id="toggleOverlayBtn">Overlay: On</button>
+          </div>
+
+          <div class="body-toggle-grid">
+            <button type="button" class="part-toggle on" data-part="head">Head</button>
+            <button type="button" class="part-toggle on" data-part="torso">Torso</button>
+            <button type="button" class="part-toggle on" data-part="rArm">R. Arm</button>
+            <button type="button" class="part-toggle on" data-part="lArm">L. Arm</button>
+            <button type="button" class="part-toggle on" data-part="rLeg">R. Leg</button>
+            <button type="button" class="part-toggle on" data-part="lLeg">L. Leg</button>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
+    <a href="dashboard.html" class="mobile-nav-item">
+      <i class="ri-dashboard-line"></i>
+      <span>Home</span>
+    </a>
+    <a href="library.html" class="mobile-nav-item">
+      <i class="ri-stack-line"></i>
+      <span>Library</span>
+    </a>
+    <a href="skin-edit.html" class="mobile-nav-item active">
+      <i class="ph-bold ph-paint-brush"></i>
+      <span>Editor</span>
+    </a>
+    <a href="settings.html" class="mobile-nav-item">
+      <i class="ri-settings-3-line"></i>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <!-- Create Brand-New Skin Modal inside Editor -->
+  <div class="modal-backdrop" id="editorNewSkinModal" role="dialog" aria-modal="true">
+    <div class="modal-sheet">
+      <div class="sheet-drag-zone"><div class="sheet-drag-handle"></div></div>
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="ri-add-circle-line"></i> Create Brand-New Skin</h3>
+        <button type="button" class="btn btn-icon btn-sm" data-close-modal><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body">
+        <p class="card-subtitle" style="margin-bottom: 14px;">Your current skin stays safe in the library while a brand-new skin is created.</p>
+        <div class="form-group">
+          <label class="form-label" for="edNewName">New Skin Name</label>
+          <input type="text" id="edNewName" class="input" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edNewModel">Rig Model</label>
+          <select id="edNewModel" class="select">
+            <option value="classic">Classic (4px arms)</option>
+            <option value="slim">Slim (3px arms)</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="edNewBase">Template</label>
+          <select id="edNewBase" class="select">
+            <option value="blank">Blank 64&times;64 Transparent Canvas</option>
+            <option value="emerald">Emerald Warden Base</option>
+            <option value="steve">Classic Explorer Base</option>
+            <option value="knight">Iron Vanguard Base</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-close-modal>Cancel</button>
+        <button type="button" class="btn btn-primary" id="edConfirmNewSkinBtn">Create New Skin</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import / Export Modal -->
+  <div class="modal-backdrop" id="editorIoModal" role="dialog" aria-modal="true">
+    <div class="modal-sheet">
+      <div class="sheet-drag-zone"><div class="sheet-drag-handle"></div></div>
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="ri-arrow-up-down-line"></i> Import / Export Skin</h3>
+        <button type="button" class="btn btn-icon btn-sm" data-close-modal><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Export Current Skin</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <button type="button" class="btn btn-primary" id="modalExportPngBtn"><i class="ri-image-download-line"></i> Export .PNG</button>
+            <button type="button" class="btn btn-lime" id="modalExportJsonBtn"><i class="ri-braces-line"></i> Export .JSON</button>
+          </div>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border-color); margin: 18px 0;" />
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="editorFileInput">Import Image (.PNG) or (.JSON) onto Canvas</label>
+          <input type="file" id="editorFileInput" class="input" accept=".png,.json,image/png,application/json" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-close-modal>Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Desktop Keyboard Shortcuts Modal -->
+  <div class="modal-backdrop" id="shortcutsModal" role="dialog" aria-modal="true">
+    <div class="modal-sheet">
+      <div class="sheet-drag-zone"><div class="sheet-drag-handle"></div></div>
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="ri-keyboard-box-line"></i> Desktop Keyboard Shortcuts</h3>
+        <button type="button" class="btn btn-icon btn-sm" data-close-modal><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="shortcut-row"><span>Undo Stroke</span><div><kbd>Ctrl</kbd> + <kbd>Z</kbd></div></div>
+        <div class="shortcut-row"><span>Redo Stroke</span><div><kbd>Ctrl</kbd> + <kbd>Y</kbd> or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></div></div>
+        <div class="shortcut-row"><span>Save to Library</span><div><kbd>Ctrl</kbd> + <kbd>S</kbd></div></div>
+        <div class="shortcut-row"><span>Create Brand-New Skin</span><div><kbd>Alt</kbd> + <kbd>N</kbd></div></div>
+        <div class="shortcut-row"><span>Pencil / Eraser / Bucket / Picker / Shade</span><div><kbd>B</kbd> <kbd>E</kbd> <kbd>G</kbd> <kbd>I</kbd> <kbd>S</kbd></div></div>
+        <div class="shortcut-row"><span>Toggle Mirror Symmetry</span><div><kbd>M</kbd></div></div>
+        <div class="shortcut-row"><span>Toggle Pixel Grid</span><div><kbd>#</kbd></div></div>
+        <div class="shortcut-row"><span>Toggle 2nd Overlay Layer</span><div><kbd>O</kbd></div></div>
+        <div class="shortcut-row"><span>Select Swatch 1&ndash;9</span><div><kbd>1</kbd> &ndash; <kbd>9</kbd></div></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-close-modal>Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const settings = SkinStudio.getSettings();
+
+      const texCanvas = document.createElement('canvas');
+      texCanvas.width = 64;
+      texCanvas.height = 64;
+      const texCtx = texCanvas.getContext('2d', { willReadFrequently: true });
+      texCtx.imageSmoothingEnabled = false;
+
+      const view2d = document.getElementById('skin2dCanvas');
+      const ctx2d = view2d.getContext('2d');
+      ctx2d.imageSmoothingEnabled = false;
+
+      const view3d = document.getElementById('skin3dCanvas');
+      const ctx3d = view3d.getContext('2d');
+
+      let activeSkin = SkinStudio.getActiveSkin();
+      let currentTool = 'pencil';
+      let activeColor = '#30d158';
+      let mirrorMode = false;
+      let showGrid = settings.showGridByDefault;
+      let showUvGuides = settings.showUvGuidesByDefault;
+      let showOverlay = true;
+      let currentPose = settings.walkAnimByDefault ? 'walk' : 'idle';
+      let isDrawing = false;
+
+      // Sync initial toggle button labels with Settings
+      document.getElementById('gridToggleBtn').innerHTML = `<i class="ri-grid-line"></i> Grid: ${showGrid ? 'On' : 'Off'}`;
+      document.getElementById('uvGuidesBtn').textContent = `UV Guides: ${showUvGuides ? 'On' : 'Off'}`;
+      document.getElementById('poseSelect').value = currentPose;
+
+      let yaw = -0.45;
+      let pitch = 0.22;
+      let zoom = 1.05;
+      let walkPhase = 0;
+      const visibleParts = { head: true, torso: true, rArm: true, lArm: true, rLeg: true, lLeg: true };
+
+      const undoStack = [];
+      const redoStack = [];
+
+      function pushHistory() {
+        undoStack.push(texCtx.getImageData(0, 0, 64, 64));
+        if (undoStack.length > 50) undoStack.shift();
+        redoStack.length = 0;
+      }
+
+      function performUndo() {
+        if (!undoStack.length) return;
+        redoStack.push(texCtx.getImageData(0, 0, 64, 64));
+        texCtx.putImageData(undoStack.pop(), 0, 0);
+        render2D();
+        autoSaveIfEnabled();
+      }
+
+      function performRedo() {
+        if (!redoStack.length) return;
+        undoStack.push(texCtx.getImageData(0, 0, 64, 64));
+        texCtx.putImageData(redoStack.pop(), 0, 0);
+        render2D();
+        autoSaveIfEnabled();
+      }
+
+      function loadSkinIntoEditor(skinObj) {
+        activeSkin = skinObj;
+        document.getElementById('editorSkinName').value = activeSkin.name;
+        document.getElementById('editorModelSelect').value = activeSkin.model || 'classic';
+
+        const img = new Image();
+        img.onload = () => {
+          texCtx.clearRect(0, 0, 64, 64);
+          texCtx.drawImage(img, 0, 0, 64, 64);
+          undoStack.length = 0;
+          redoStack.length = 0;
+          render2D();
+        };
+        img.src = activeSkin.dataUrl;
+      }
+
+      loadSkinIntoEditor(activeSkin);
+
+      function getCurrentSkinPayload() {
+        return {
+          id: activeSkin.id,
+          name: document.getElementById('editorSkinName').value.trim() || 'Untitled Skin',
+          model: document.getElementById('editorModelSelect').value,
+          tags: activeSkin.tags || ['Edited'],
+          dataUrl: texCanvas.toDataURL('image/png')
+        };
+      }
+
+      function saveCurrentSkin(silent = false) {
+        activeSkin = SkinStudio.upsertSkin(getCurrentSkinPayload());
+        SkinStudio.setActiveSkinId(activeSkin.id);
+        if (!silent) SkinStudio.showToast(`Saved "${activeSkin.name}"`);
+      }
+
+      function autoSaveIfEnabled() {
+        if (SkinStudio.getSettings().autoSaveEditor) {
+          saveCurrentSkin(true);
+        }
+      }
+
+      // Swatches
+      const swatches = [
+        '#30d158', '#153224', '#a3e669', '#f0b892', '#d99b72', '#8d5524',
+        '#0a84ff', '#5e5ce6', '#ff375f', '#ff9f0a', '#1c1c1e', '#ffffff'
+      ];
+      const swatchGrid = document.getElementById('swatchGrid');
+      swatches.forEach((hex) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'swatch';
+        btn.style.background = hex;
+        btn.title = hex;
+        btn.addEventListener('click', () => setColor(hex));
+        swatchGrid.appendChild(btn);
+      });
+
+      function setColor(hex) {
+        activeColor = hex;
+        document.getElementById('colorPickerInput').value = hex;
+        document.getElementById('colorHexInput').value = hex;
+      }
+
+      function selectTool(toolName) {
+        currentTool = toolName;
+        document.querySelectorAll('[data-tool]').forEach((b) => {
+          b.classList.toggle('active', b.getAttribute('data-tool') === toolName);
+        });
+      }
+
+      document.getElementById('colorPickerInput').addEventListener('input', (e) => setColor(e.target.value));
+      document.getElementById('colorHexInput').addEventListener('change', (e) => {
+        if (/^#[0-9a-fA-F]{6}$/.test(e.target.value.trim())) setColor(e.target.value.trim());
+      });
+
+      document.querySelectorAll('[data-tool]').forEach((btn) => {
+        btn.addEventListener('click', () => selectTool(btn.getAttribute('data-tool')));
+      });
+
+      document.getElementById('mirrorToggleBtn').addEventListener('click', (e) => {
+        mirrorMode = !mirrorMode;
+        e.currentTarget.classList.toggle('active', mirrorMode);
+        SkinStudio.showToast(`Mirror Symmetry: ${mirrorMode ? 'On' : 'Off'}`);
+      });
+
+      document.getElementById('flipHorizontalBtn').addEventListener('click', () => {
+        pushHistory();
+        const temp = document.createElement('canvas');
+        temp.width = 64;
+        temp.height = 64;
+        temp.getContext('2d').drawImage(texCanvas, 0, 0);
+        texCtx.save();
+        texCtx.clearRect(0, 0, 64, 64);
+        texCtx.translate(64, 0);
+        texCtx.scale(-1, 1);
+        texCtx.drawImage(temp, 0, 0);
+        texCtx.restore();
+        render2D();
+        autoSaveIfEnabled();
+        SkinStudio.showToast('Flipped texture horizontally');
+      });
+
+      document.getElementById('gridToggleBtn').addEventListener('click', (e) => {
+        showGrid = !showGrid;
+        e.currentTarget.innerHTML = `<i class="ri-grid-line"></i> Grid: ${showGrid ? 'On' : 'Off'}`;
+        render2D();
+      });
+
+      document.getElementById('uvGuidesBtn').addEventListener('click', (e) => {
+        showUvGuides = !showUvGuides;
+        e.target.textContent = `UV Guides: ${showUvGuides ? 'On' : 'Off'}`;
+        render2D();
+      });
+
+      document.getElementById('undoBtn').addEventListener('click', performUndo);
+      document.getElementById('redoBtn').addEventListener('click', performRedo);
+
+      // Fixed "New Skin" inside Editor: opens modal, creates a NEW record, never overwrites previous skin
+      document.getElementById('editorNewSkinBtn').addEventListener('click', () => {
+        saveCurrentSkin(true); // Preserve current work first
+        document.getElementById('edNewName').value = `New Skin #${SkinStudio.getSkins().length + 1}`;
+        document.getElementById('edNewModel').value = SkinStudio.getSettings().defaultModel || 'classic';
+        SkinStudio.openModal('editorNewSkinModal');
+      });
+
+      document.getElementById('edConfirmNewSkinBtn').addEventListener('click', () => {
+        const created = SkinStudio.createNewSkin({
+          name: document.getElementById('edNewName').value,
+          model: document.getElementById('edNewModel').value,
+          base: document.getElementById('edNewBase').value
+        });
+        loadSkinIntoEditor(created);
+        SkinStudio.closeModal('editorNewSkinModal');
+        SkinStudio.showToast(`Created "${created.name}"`);
+      });
+
+      // UV Regions
+      const uvRegions = [
+        { name: 'Head Base', x: 0, y: 0, w: 32, h: 16, color: 'rgba(48, 209, 88, 0.32)' },
+        { name: 'Hat Overlay', x: 32, y: 0, w: 32, h: 16, color: 'rgba(163, 230, 105, 0.32)' },
+        { name: 'Right Leg', x: 0, y: 16, w: 16, h: 16, color: 'rgba(10, 132, 255, 0.28)' },
+        { name: 'Torso Base', x: 16, y: 16, w: 24, h: 16, color: 'rgba(255, 159, 10, 0.28)' },
+        { name: 'Right Arm', x: 40, y: 16, w: 16, h: 16, color: 'rgba(191, 90, 242, 0.28)' },
+        { name: 'Left Leg', x: 16, y: 48, w: 16, h: 16, color: 'rgba(10, 132, 255, 0.28)' },
+        { name: 'Left Arm', x: 32, y: 48, w: 16, h: 16, color: 'rgba(191, 90, 242, 0.28)' }
+      ];
+
+      function detectUvRegion(px, py) {
+        const hit = uvRegions.find((r) => px >= r.x && px < r.x + r.w && py >= r.y && py < r.y + r.h);
+        return hit ? hit.name : 'Overlay / Armor Layer';
+      }
+
+      function render2D() {
+        ctx2d.clearRect(0, 0, 512, 512);
+        ctx2d.drawImage(texCanvas, 0, 0, 512, 512);
+
+        if (showUvGuides) {
+          ctx2d.lineWidth = 1.5;
+          uvRegions.forEach((r) => {
+            ctx2d.strokeStyle = r.color;
+            ctx2d.strokeRect(r.x * 8 + 0.5, r.y * 8 + 0.5, r.w * 8 - 1, r.h * 8 - 1);
+          });
+        }
+
+        if (showGrid) {
+          ctx2d.strokeStyle = 'rgba(142, 142, 147, 0.22)';
+          ctx2d.lineWidth = 1;
+          ctx2d.beginPath();
+          for (let i = 1; i < 64; i++) {
+            const p = i * 8 + 0.5;
+            ctx2d.moveTo(p, 0);
+            ctx2d.lineTo(p, 512);
+            ctx2d.moveTo(0, p);
+            ctx2d.lineTo(512, p);
+          }
+          ctx2d.stroke();
+        }
+      }
+
+      function floodFill(startX, startY, fillHex) {
+        const img = texCtx.getImageData(0, 0, 64, 64);
+        const data = img.data;
+        const idx = (startY * 64 + startX) * 4;
+        const target = [data[idx], data[idx + 1], data[idx + 2], data[idx + 3]];
+
+        const r = parseInt(fillHex.slice(1, 3), 16);
+        const g = parseInt(fillHex.slice(3, 5), 16);
+        const b = parseInt(fillHex.slice(5, 7), 16);
+        if (target[0] === r && target[1] === g && target[2] === b && target[3] === 255) return;
+
+        const stack = [[startX, startY]];
+        const visited = new Uint8Array(64 * 64);
+
+        while (stack.length) {
+          const [x, y] = stack.pop();
+          if (x < 0 || x >= 64 || y < 0 || y >= 64) continue;
+          const pos = y * 64 + x;
+          if (visited[pos]) continue;
+          const i = pos * 4;
+          if (
+            data[i] === target[0] &&
+            data[i + 1] === target[1] &&
+            data[i + 2] === target[2] &&
+            data[i + 3] === target[3]
+          ) {
+            visited[pos] = 1;
+            data[i] = r;
+            data[i + 1] = g;
+            data[i + 2] = b;
+            data[i + 3] = 255;
+            stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+          }
+        }
+        texCtx.putImageData(img, 0, 0);
+      }
+
+      function shadeColor(hex, delta) {
+        const clamp = (v) => Math.max(0, Math.min(255, v));
+        const r = clamp(parseInt(hex.slice(1, 3), 16) + delta);
+        const g = clamp(parseInt(hex.slice(3, 5), 16) + delta);
+        const b = clamp(parseInt(hex.slice(5, 7), 16) + delta);
+        return '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
+      }
+
+      function applyToolAt(px, py) {
+        if (px < 0 || px >= 64 || py < 0 || py >= 64) return;
+        const paintPixel = (x, y) => {
+          if (currentTool === 'pencil') {
+            texCtx.fillStyle = activeColor;
+            texCtx.fillRect(x, y, 1, 1);
+          } else if (currentTool === 'shade') {
+            const intensity = SkinStudio.getSettings().pixelShadeIntensity || 18;
+            const jitter = Math.round((Math.random() - 0.5) * 2 * intensity);
+            texCtx.fillStyle = shadeColor(activeColor, jitter);
+            texCtx.fillRect(x, y, 1, 1);
+          } else if (currentTool === 'eraser') {
+            texCtx.clearRect(x, y, 1, 1);
+          }
+        };
+
+        if (currentTool === 'picker') {
+          const d = texCtx.getImageData(px, py, 1, 1).data;
+          if (d[3] > 0) {
+            const hex = '#' + [d[0], d[1], d[2]].map((v) => v.toString(16).padStart(2, '0')).join('');
+            setColor(hex);
+            SkinStudio.showToast(`Picked ${hex}`);
+          }
+          return;
+        }
+
+        if (currentTool === 'fill') {
+          floodFill(px, py, activeColor);
+          render2D();
+          return;
+        }
+
+        paintPixel(px, py);
+        if (mirrorMode) {
+          paintPixel(63 - px, py);
+        }
+        render2D();
+      }
+
+      function getCoordsFromEvent(e) {
+        const rect = view2d.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const px = Math.floor(((clientX - rect.left) / rect.width) * 64);
+        const py = Math.floor(((clientY - rect.top) / rect.height) * 64);
+        return { px: Math.max(0, Math.min(63, px)), py: Math.max(0, Math.min(63, py)) };
+      }
+
+      const startPaint = (e) => {
+        e.preventDefault();
+        const { px, py } = getCoordsFromEvent(e);
+        if (currentTool !== 'picker') pushHistory();
+        isDrawing = true;
+        applyToolAt(px, py);
+      };
+
+      const movePaint = (e) => {
+        const { px, py } = getCoordsFromEvent(e);
+        document.getElementById('cursorCoords').textContent = `X:${px} Y:${py}`;
+        document.getElementById('uvPartLabel').textContent = detectUvRegion(px, py);
+        if (!isDrawing) return;
+        e.preventDefault();
+        if (currentTool === 'pencil' || currentTool === 'eraser' || currentTool === 'shade') {
+          applyToolAt(px, py);
+        }
+      };
+
+      const endPaint = () => {
+        if (isDrawing) {
+          isDrawing = false;
+          autoSaveIfEnabled();
+        }
+      };
+
+      view2d.addEventListener('mousedown', startPaint);
+      window.addEventListener('mousemove', movePaint);
+      window.addEventListener('mouseup', endPaint);
+      view2d.addEventListener('touchstart', startPaint, { passive: false });
+      view2d.addEventListener('touchmove', movePaint, { passive: false });
+      view2d.addEventListener('touchend', endPaint);
+
+      /* =========================================================
+         DESKTOP KEYBOARD SHORTCUTS
+         ========================================================= */
+      document.addEventListener('keydown', (e) => {
+        // Ignore single-key shortcuts when typing inside inputs
+        const tag = document.activeElement && document.activeElement.tagName;
+        const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+          e.preventDefault();
+          performUndo();
+          return;
+        }
+        if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') || ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')) {
+          e.preventDefault();
+          performRedo();
+          return;
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+          e.preventDefault();
+          saveCurrentSkin(false);
+          return;
+        }
+        if (e.altKey && e.key.toLowerCase() === 'n') {
+          e.preventDefault();
+          document.getElementById('editorNewSkinBtn').click();
+          return;
+        }
+
+        if (isTyping) return;
+
+        const key = e.key.toLowerCase();
+        if (key === 'b') selectTool('pencil');
+        else if (key === 'e') selectTool('eraser');
+        else if (key === 'g') selectTool('fill');
+        else if (key === 'i') selectTool('picker');
+        else if (key === 's') selectTool('shade');
+        else if (key === 'm') document.getElementById('mirrorToggleBtn').click();
+        else if (key === '#') document.getElementById('gridToggleBtn').click();
+        else if (key === 'o') document.getElementById('toggleOverlayBtn').click();
+        else if (key === '?') SkinStudio.openModal('shortcutsModal');
+        else if (/^[1-9]$/.test(key)) {
+          const idx = parseInt(key, 10) - 1;
+          if (swatches[idx]) {
+            setColor(swatches[idx]);
+            SkinStudio.showToast(`Swatch ${key}: ${swatches[idx]}`);
+          }
+        }
+      });
+
+      document.getElementById('openShortcutsBtn').addEventListener('click', () => {
+        SkinStudio.openModal('shortcutsModal');
+      });
+
+      /* =========================================================
+         3D VOXEL CHARACTER ENGINE
+         ========================================================= */
+      function rotatePoint(p, rx, ry) {
+        const cosX = Math.cos(rx), sinX = Math.sin(rx);
+        const y1 = p[1] * cosX - p[2] * sinX;
+        const z1 = p[1] * sinX + p[2] * cosX;
+
+        const cosY = Math.cos(ry), sinY = Math.sin(ry);
+        const x2 = p[0] * cosY + z1 * sinY;
+        const z2 = -p[0] * sinY + z1 * cosY;
+        return [x2, y1, z2];
+      }
+
+      function buildBoxFaces(box) {
+        const { w, h, d, pivot, offset, swingX, swingZ, uv, isOverlay } = box;
+        const inf = isOverlay ? 0.35 : 0;
+        const x0 = offset[0] - inf, x1 = offset[0] + w + inf;
+        const y0 = offset[1] - inf, y1 = offset[1] + h + inf;
+        const z0 = offset[2] - inf, z1 = offset[2] + d + inf;
+
+        const rawVerts = [
+          [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1],
+          [x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0]
+        ];
+
+        const cosS = Math.cos(swingX || 0), sinS = Math.sin(swingX || 0);
+        const cosZ = Math.cos(swingZ || 0), sinZ = Math.sin(swingZ || 0);
+
+        const worldVerts = rawVerts.map(([vx, vy, vz]) => {
+          const zx = vx * cosZ - vy * sinZ;
+          const zy = vx * sinZ + vy * cosZ;
+          const sy = zy * cosS - vz * sinS;
+          const sz = zy * sinS + vz * cosS;
+          return rotatePoint([zx + pivot[0], sy + pivot[1], sz + pivot[2]], pitch, yaw);
+        });
+
+        const faceDefs = [
+          { idx: [0, 1, 2, 3], uv: uv.front, shade: 1.0 },
+          { idx: [4, 5, 6, 7], uv: uv.back,  shade: 0.85 },
+          { idx: [5, 0, 3, 6], uv: uv.right, shade: 0.92 },
+          { idx: [1, 4, 7, 2], uv: uv.left,  shade: 0.92 },
+          { idx: [5, 4, 1, 0], uv: uv.top,   shade: 1.05 },
+          { idx: [3, 2, 7, 6], uv: uv.bottom,shade: 0.78 }
+        ];
+
+        return faceDefs.map((f) => {
+          const pts = f.idx.map((i) => worldVerts[i]);
+          const ax = pts[1][0] - pts[0][0], ay = pts[1][1] - pts[0][1];
+          const bx = pts[2][0] - pts[0][0], by = pts[2][1] - pts[0][1];
+          const crossZ = ax * by - ay * bx;
+          const avgZ = (pts[0][2] + pts[1][2] + pts[2][2] + pts[3][2]) / 4;
+          return { pts, uv: f.uv, shade: f.shade, visible: crossZ > 0, avgZ, isOverlay };
+        });
+      }
+
+      function drawTexturedQuad(ctx, pts2d, uvRect, shade) {
+        const [ux, uy, uw, uh] = uvRect;
+        if (uw <= 0 || uh <= 0) return;
+
+        const tris = [
+          { p: [pts2d[0], pts2d[1], pts2d[2]], t: [[ux, uy], [ux + uw, uy], [ux + uw, uy + uh]] },
+          { p: [pts2d[0], pts2d[2], pts2d[3]], t: [[ux, uy], [ux + uw, uy + uh], [ux, uy + uh]] }
+        ];
+
+        tris.forEach(({ p, t }) => {
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(p[0][0], p[0][1]);
+          ctx.lineTo(p[1][0], p[1][1]);
+          ctx.lineTo(p[2][0], p[2][1]);
+          ctx.closePath();
+          ctx.clip();
+
+          const x0 = t[0][0], y0 = t[0][1], x1 = t[1][0], y1 = t[1][1], x2 = t[2][0], y2 = t[2][1];
+          const u0 = p[0][0], v0 = p[0][1], u1 = p[1][0], v1 = p[1][1], u2 = p[2][0], v2 = p[2][1];
+
+          const det = (x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0);
+          if (Math.abs(det) < 1e-5) { ctx.restore(); return; }
+
+          const a = ((u1 - u0) * (y2 - y0) - (u2 - u0) * (y1 - y0)) / det;
+          const b = ((v1 - v0) * (y2 - y0) - (v2 - v0) * (y1 - y0)) / det;
+          const c = ((x1 - x0) * (u2 - u0) - (x2 - x0) * (u1 - u0)) / det;
+          const d = ((x1 - x0) * (v2 - v0) - (x2 - x0) * (v1 - v0)) / det;
+          const e = u0 - a * x0 - c * y0;
+          const f = v0 - b * x0 - d * y0;
+
+          ctx.transform(a, b, c, d, e, f);
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(texCanvas, 0, 0);
+
+          if (shade < 1) {
+            ctx.fillStyle = `rgba(0, 0, 0, ${(1 - shade) * 0.7})`;
+            ctx.fillRect(ux, uy, uw, uh);
+          }
+          ctx.restore();
+        });
+      }
+
+      function render3DFrame() {
+        const w = view3d.width;
+        const h = view3d.height;
+        ctx3d.clearRect(0, 0, w, h);
+
+        walkPhase += 0.048;
+        let swing = 0;
+        let lArmZ = 0;
+        if (currentPose === 'walk') swing = Math.sin(walkPhase) * 0.44;
+        else if (currentPose === 'wave') lArmZ = -2.4 + Math.sin(walkPhase * 1.6) * 0.35;
+
+        const isSlim = document.getElementById('editorModelSelect').value === 'slim';
+        const armW = isSlim ? 3 : 4;
+        const parts = [];
+
+        if (visibleParts.head) {
+          const headUV = { top: [8, 0, 8, 8], bottom: [16, 0, 8, 8], right: [0, 8, 8, 8], front: [8, 8, 8, 8], left: [16, 8, 8, 8], back: [24, 8, 8, 8] };
+          parts.push({ w: 8, h: 8, d: 8, pivot: [0, -8, 0], offset: [-4, -8, -4], swingX: 0, uv: headUV, isOverlay: false });
+          if (showOverlay) {
+            const hatUV = { top: [40, 0, 8, 8], bottom: [48, 0, 8, 8], right: [32, 8, 8, 8], front: [40, 8, 8, 8], left: [48, 8, 8, 8], back: [56, 8, 8, 8] };
+            parts.push({ w: 8, h: 8, d: 8, pivot: [0, -8, 0], offset: [-4, -8, -4], swingX: 0, uv: hatUV, isOverlay: true });
+          }
+        }
+
+        if (visibleParts.torso) {
+          const torsoUV = { top: [20, 16, 8, 4], bottom: [28, 16, 8, 4], right: [16, 20, 4, 12], front: [20, 20, 8, 12], left: [28, 20, 4, 12], back: [32, 20, 8, 12] };
+          parts.push({ w: 8, h: 12, d: 4, pivot: [0, -8, 0], offset: [-4, 0, -2], swingX: 0, uv: torsoUV, isOverlay: false });
+          if (showOverlay) {
+            const jacketUV = { top: [20, 32, 8, 4], bottom: [28, 32, 8, 4], right: [16, 36, 4, 12], front: [20, 36, 8, 12], left: [28, 36, 4, 12], back: [32, 36, 8, 12] };
+            parts.push({ w: 8, h: 12, d: 4, pivot: [0, -8, 0], offset: [-4, 0, -2], swingX: 0, uv: jacketUV, isOverlay: true });
+          }
+        }
+
+        if (visibleParts.rArm) {
+          const rArmUV = { top: [44, 16, armW, 4], bottom: [44 + armW, 16, armW, 4], right: [40, 20, 4, 12], front: [44, 20, armW, 12], left: [44 + armW, 20, 4, 12], back: [48 + armW, 20, armW, 12] };
+          parts.push({ w: armW, h: 12, d: 4, pivot: [-4 - armW, -7, 0], offset: [0, -1, -2], swingX: -swing, uv: rArmUV, isOverlay: false });
+          if (showOverlay) {
+            const rSleeveUV = { top: [44, 32, armW, 4], bottom: [44 + armW, 32, armW, 4], right: [40, 36, 4, 12], front: [44, 36, armW, 12], left: [44 + armW, 36, 4, 12], back: [48 + armW, 36, armW, 12] };
+            parts.push({ w: armW, h: 12, d: 4, pivot: [-4 - armW, -7, 0], offset: [0, -1, -2], swingX: -swing, uv: rSleeveUV, isOverlay: true });
+          }
+        }
+
+        if (visibleParts.lArm) {
+          const lArmUV = { top: [36, 48, armW, 4], bottom: [36 + armW, 48, armW, 4], right: [32, 52, 4, 12], front: [36, 52, armW, 12], left: [36 + armW, 52, 4, 12], back: [40 + armW, 52, armW, 12] };
+          parts.push({ w: armW, h: 12, d: 4, pivot: [4, -7, 0], offset: [0, -1, -2], swingX: swing, swingZ: lArmZ, uv: lArmUV, isOverlay: false });
+          if (showOverlay) {
+            const lSleeveUV = { top: [52, 48, armW, 4], bottom: [52 + armW, 48, armW, 4], right: [48, 52, 4, 12], front: [52, 52, armW, 12], left: [52 + armW, 52, 4, 12], back: [56 + armW, 52, armW, 12] };
+            parts.push({ w: armW, h: 12, d: 4, pivot: [4, -7, 0], offset: [0, -1, -2], swingX: swing, swingZ: lArmZ, uv: lSleeveUV, isOverlay: true });
+          }
+        }
+
+        if (visibleParts.rLeg) {
+          const rLegUV = { top: [4, 16, 4, 4], bottom: [8, 16, 4, 4], right: [0, 20, 4, 12], front: [4, 20, 4, 12], left: [8, 20, 4, 12], back: [12, 20, 4, 12] };
+          parts.push({ w: 4, h: 12, d: 4, pivot: [-4, 4, 0], offset: [0, 0, -2], swingX: swing, uv: rLegUV, isOverlay: false });
+          if (showOverlay) {
+            const rPantUV = { top: [4, 32, 4, 4], bottom: [8, 32, 4, 4], right: [0, 36, 4, 12], front: [4, 36, 4, 12], left: [8, 36, 4, 12], back: [12, 36, 4, 12] };
+            parts.push({ w: 4, h: 12, d: 4, pivot: [-4, 4, 0], offset: [0, 0, -2], swingX: swing, uv: rPantUV, isOverlay: true });
+          }
+        }
+
+        if (visibleParts.lLeg) {
+          const lLegUV = { top: [20, 48, 4, 4], bottom: [24, 48, 4, 4], right: [16, 52, 4, 12], front: [20, 52, 4, 12], left: [24, 52, 4, 12], back: [28, 52, 4, 12] };
+          parts.push({ w: 4, h: 12, d: 4, pivot: [0, 4, 0], offset: [0, 0, -2], swingX: -swing, uv: lLegUV, isOverlay: false });
+          if (showOverlay) {
+            const lPantUV = { top: [4, 48, 4, 4], bottom: [8, 48, 4, 4], right: [0, 52, 4, 12], front: [4, 52, 4, 12], left: [8, 52, 4, 12], back: [12, 52, 4, 12] };
+            parts.push({ w: 4, h: 12, d: 4, pivot: [0, 4, 0], offset: [0, 0, -2], swingX: -swing, uv: lPantUV, isOverlay: true });
+          }
+        }
+
+        let allFaces = [];
+        parts.forEach((box) => {
+          buildBoxFaces(box).forEach((f) => {
+            if (f.visible || f.isOverlay) allFaces.push(f);
+          });
+        });
+
+        allFaces.sort((a, b) => a.avgZ - b.avgZ);
+
+        const scale = 8.4 * zoom;
+        const cx = w / 2;
+        const cy = h / 2 + 6;
+
+        allFaces.forEach((face) => {
+          const pts2d = face.pts.map(([x, y]) => [cx + x * scale, cy + y * scale]);
+          drawTexturedQuad(ctx3d, pts2d, face.uv, face.shade);
+        });
+
+        requestAnimationFrame(render3DFrame);
+      }
+
+      const vp3d = document.getElementById('viewport3d');
+      let rotating = false;
+      let lastX = 0, lastY = 0;
+
+      const startRotate = (e) => {
+        rotating = true;
+        const pt = e.touches ? e.touches[0] : e;
+        lastX = pt.clientX;
+        lastY = pt.clientY;
+      };
+      const moveRotate = (e) => {
+        if (!rotating) return;
+        e.preventDefault();
+        const pt = e.touches ? e.touches[0] : e;
+        yaw += (pt.clientX - lastX) * 0.012;
+        pitch = Math.max(-1.2, Math.min(1.2, pitch + (pt.clientY - lastY) * 0.012));
+        lastX = pt.clientX;
+        lastY = pt.clientY;
+      };
+      const endRotate = () => { rotating = false; };
+
+      vp3d.addEventListener('mousedown', startRotate);
+      window.addEventListener('mousemove', moveRotate);
+      window.addEventListener('mouseup', endRotate);
+      vp3d.addEventListener('touchstart', startRotate, { passive: true });
+      vp3d.addEventListener('touchmove', moveRotate, { passive: false });
+      vp3d.addEventListener('touchend', endRotate);
+
+      const zoomSlider = document.getElementById('zoom3dSlider');
+      zoomSlider.addEventListener('input', (e) => { zoom = parseFloat(e.target.value); });
+
+      vp3d.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        zoom = Math.max(0.65, Math.min(1.75, zoom - e.deltaY * 0.001));
+        zoomSlider.value = zoom.toFixed(2);
+      }, { passive: false });
+
+      document.getElementById('resetCamBtn').addEventListener('click', () => {
+        yaw = -0.45;
+        pitch = 0.22;
+        zoom = 1.05;
+        zoomSlider.value = 1.05;
+      });
+
+      document.getElementById('poseSelect').addEventListener('change', (e) => {
+        currentPose = e.target.value;
+      });
+
+      document.getElementById('toggleOverlayBtn').addEventListener('click', (e) => {
+        showOverlay = !showOverlay;
+        e.target.textContent = `Overlay: ${showOverlay ? 'On' : 'Off'}`;
+      });
+
+      document.querySelectorAll('[data-part]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const part = btn.getAttribute('data-part');
+          visibleParts[part] = !visibleParts[part];
+          btn.classList.toggle('on', visibleParts[part]);
+        });
+      });
+
+      // Mobile 2D / 3D Switcher
+      document.querySelectorAll('.mobile-view-tab').forEach((tab) => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.mobile-view-tab').forEach((t) => t.classList.remove('active'));
+          tab.classList.add('active');
+          const pane = tab.getAttribute('data-pane');
+          document.getElementById('pane2d').classList.toggle('mobile-hidden', pane !== '2d');
+          document.getElementById('pane3d').classList.toggle('mobile-hidden', pane !== '3d');
+        });
+      });
+
+      document.getElementById('saveLibraryBtn').addEventListener('click', () => saveCurrentSkin(false));
+
+      document.getElementById('editorIoBtn').addEventListener('click', () => SkinStudio.openModal('editorIoModal'));
+      document.getElementById('modalExportPngBtn').addEventListener('click', () => SkinStudio.exportSkinPNG(getCurrentSkinPayload()));
+      document.getElementById('modalExportJsonBtn').addEventListener('click', () => SkinStudio.exportSkinJSON(getCurrentSkinPayload()));
+
+      document.getElementById('editorFileInput').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+          const imported = await SkinStudio.parseImportedFile(file);
+          pushHistory();
+          document.getElementById('editorSkinName').value = imported.name;
+          document.getElementById('editorModelSelect').value = imported.model;
+          const img = new Image();
+          img.onload = () => {
+            texCtx.clearRect(0, 0, 64, 64);
+            texCtx.drawImage(img, 0, 0, 64, 64);
+            render2D();
+            autoSaveIfEnabled();
+          };
+          img.src = imported.dataUrl;
+          SkinStudio.closeModal('editorIoModal');
+          SkinStudio.showToast(`Loaded "${imported.name}" onto canvas`);
+        } catch (err) {
+          SkinStudio.showToast(err.message);
+        }
+      });
+
+      render3DFrame();
+    });
+  </script>
+</body>
+</html>

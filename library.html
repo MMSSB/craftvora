@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Craftvora Studio — Skin Library</title>
+  <script src="theme.js"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 220px;
+      max-width: 380px;
+    }
+
+    .search-wrap i {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    .search-wrap .input {
+      padding-left: 36px;
+    }
+
+    .filter-pills {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-surface);
+      padding: 4px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-color);
+    }
+
+    .filter-pill {
+      border: none;
+      background: transparent;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.16s ease;
+    }
+
+    .filter-pill.active {
+      background: var(--bg-pill);
+      color: var(--text-primary);
+    }
+
+    .library-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+      gap: 18px;
+    }
+
+    .skin-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .skin-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-sm);
+      border-color: var(--border-strong);
+    }
+
+    .skin-card-stage {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      height: 175px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stage-hover-hint {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: var(--radius-pill);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0.85;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+
+    .skin-card:hover .stage-hover-hint {
+      opacity: 1;
+      transform: scale(1.03);
+    }
+
+    .flat-tex-thumb {
+      width: 64px;
+      height: 64px;
+      image-rendering: pixelated;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background-image: linear-gradient(45deg, rgba(128,128,128,0.18) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(128,128,128,0.18) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(128,128,128,0.18) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(128,128,128,0.18) 75%);
+      background-size: 12px 12px;
+      background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+    }
+
+    .skin-card-actions {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    /* =========================================================
+       3D / 2D SKIN PREVIEW MODAL STYLES
+       ========================================================= */
+    .preview-modal-sheet {
+      max-width: 560px;
+    }
+
+    .preview-mode-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .preview-segmented {
+      display: inline-flex;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-pill);
+      padding: 3px;
+      gap: 4px;
+    }
+
+    .preview-seg-btn {
+      border: none;
+      background: transparent;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.16s ease;
+    }
+
+    .preview-seg-btn.active {
+      background: var(--accent-forest);
+      color: var(--accent-forest-text);
+    }
+
+    .preview-stage-box {
+      width: 100%;
+      height: 310px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      background: radial-gradient(circle at 50% 35%, var(--bg-surface), var(--bg-subtle));
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      touch-action: none;
+    }
+
+    #modal3dViewport {
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      display: block;
+    }
+
+    #modal3dViewport:active {
+      cursor: grabbing;
+    }
+
+    #modal2dViewport {
+      width: 268px;
+      height: 268px;
+      image-rendering: pixelated;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background-image: linear-gradient(45deg, rgba(128,128,128,0.16) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(128,128,128,0.16) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(128,128,128,0.16) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(128,128,128,0.16) 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+      display: none;
+    }
+
+    .preview-controls-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .preview-meta-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 680px) {
+      .preview-stage-box {
+        height: 270px;
+      }
+      #modal2dViewport {
+        width: 232px;
+        height: 232px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a href="dashboard.html" class="brand">
+      <span class="brand-badge"><i class="fa-solid fa-cube"></i></span>
+      <span>Craftvora</span>
+    </a>
+
+    <nav class="nav-pills" aria-label="Primary">
+      <a href="dashboard.html" class="nav-pill"><i class="ri-dashboard-line"></i> Dashboard</a>
+      <a href="library.html" class="nav-pill active"><i class="ri-stack-line"></i> Library</a>
+      <a href="skin-edit.html" class="nav-pill"><i class="ph-bold ph-paint-brush"></i> Skin Studio</a>
+    </nav>
+
+    <div class="topbar-actions">
+      <div class="theme-dropdown-wrap">
+        <button type="button" class="icon-circle-btn" id="themeDropdownTrigger" aria-label="Switch Theme" title="Appearance">
+          <i id="navThemeCurrentIcon" class="ri-contrast-2-line"></i>
+        </button>
+        <div class="theme-dropdown-menu" id="themeDropdownMenu" role="menu">
+          <div class="theme-menu-header">Appearance</div>
+          <button type="button" class="theme-menu-item" data-theme-option="light">
+            <span><i class="ph-bold ph-sun"></i> Light</span>
+            <i class="ri-check-line check-mark"></i>
+          </button>
+          <button type="button" class="theme-menu-item" data-theme-option="dark">
+            <span><i class="ph-bold ph-moon-stars"></i> Dark </span>
+            <i class="ri-check-line check-mark"></i>
+          </button>
+          <button type="button" class="theme-menu-item" data-theme-option="system">
+            <span><i class="ri-contrast-2-line"></i> System Default</span>
+            <i class="ri-check-line check-mark"></i>
+          </button>
+        </div>
+      </div>
+
+      <a href="settings.html" class="icon-circle-btn" aria-label="Studio Settings" title="Settings">
+        <i class="ri-settings-3-line"></i>
+      </a>
+    </div>
+  </header>
+
+  <main class="app-container">
+    <div class="breadcrumb">
+      <span>Craftvora</span>
+      <i class="ri-arrow-right-s-line"></i>
+      <span>Library</span>
+    </div>
+
+    <div class="page-header">
+      <h1 class="page-title">Skin Library</h1>
+      <div class="header-controls">
+        <button type="button" class="btn" id="libImportBtn"><i class="ri-upload-2-line"></i> Import PNG / JSON</button>
+        <button type="button" class="btn btn-primary" id="libCreateNewBtn"><i class="ri-add-line"></i> New Skin</button>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <i class="ri-search-line"></i>
+        <input type="search" id="libSearchInput" class="input" placeholder="Search saved skins by name or tag..." />
+      </div>
+
+      <div class="filter-pills" role="tablist">
+        <button type="button" class="filter-pill active" data-filter="all">All</button>
+        <button type="button" class="filter-pill" data-filter="classic">Classic (4px)</button>
+        <button type="button" class="filter-pill" data-filter="slim">Slim (3px)</button>
+      </div>
+    </div>
+
+    <section class="library-grid" id="libraryGrid"></section>
+  </main>
+
+  <nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
+    <a href="dashboard.html" class="mobile-nav-item">
+      <i class="ri-dashboard-line"></i>
+      <span>Home</span>
+    </a>
+    <a href="library.html" class="mobile-nav-item active">
+      <i class="ri-stack-fill"></i>
+      <span>Library</span>
+    </a>
+    <a href="skin-edit.html" class="mobile-nav-item">
+      <i class="ph-bold ph-paint-brush"></i>
+      <span>Editor</span>
+    </a>
+    <a href="settings.html" class="mobile-nav-item">
+      <i class="ri-settings-3-line"></i>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <!-- =========================================================
+       NEW: INTERACTIVE 3D & 2D SKIN PREVIEW MODAL
+       (Desktop Modal + Mobile Draggable Bottom Sheet)
+       ========================================================= -->
+  <div class="modal-backdrop" id="skinPreviewModal" role="dialog" aria-modal="true" aria-labelledby="previewModalTitle">
+    <div class="modal-sheet preview-modal-sheet">
+      <div class="sheet-drag-zone"><div class="sheet-drag-handle"></div></div>
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title" id="previewModalTitle">Skin Preview</h3>
+          <div class="card-subtitle" id="previewModalSub">Drag to rotate 3D model</div>
+        </div>
+        <button type="button" class="btn btn-icon btn-sm" data-close-modal><i class="ri-close-line"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- 3D / 2D Switcher & Layer Controls -->
+        <div class="preview-mode-bar">
+          <div class="preview-segmented" role="tablist">
+            <button type="button" class="preview-seg-btn active" id="switchTo3dBtn" data-preview-mode="3d">
+              <i class="fa-solid fa-cube"></i> 3D View
+            </button>
+            <button type="button" class="preview-seg-btn" id="switchTo2dBtn" data-preview-mode="2d">
+              <i class="ri-grid-line"></i> 2D Texture
+            </button>
+          </div>
+
+          <div style="display: flex; gap: 6px;">
+            <button type="button" class="btn btn-sm" id="prevWalkBtn">Walk: On</button>
+            <button type="button" class="btn btn-sm" id="prevOverlayBtn">Overlay: On</button>
+          </div>
+        </div>
+
+        <!-- Viewport Stage -->
+        <div class="preview-stage-box" id="prevStageBox">
+          <canvas id="modal3dViewport" width="460" height="310"></canvas>
+          <canvas id="modal2dViewport" width="256" height="256"></canvas>
+        </div>
+
+        <!-- 3D Zoom & Reset Strip -->
+        <div class="preview-controls-strip" id="prev3dControls">
+          <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 180px;">
+            <i class="ri-zoom-out-line" style="color: var(--text-muted);"></i>
+            <input type="range" id="prevZoomSlider" min="0.65" max="1.75" step="0.05" value="1.05" style="flex: 1; accent-color: var(--accent-forest);" />
+            <i class="ri-zoom-in-line" style="color: var(--text-muted);"></i>
+          </div>
+          <button type="button" class="btn btn-sm" id="prevResetCamBtn"><i class="ri-refresh-line"></i> Reset Angle</button>
+        </div>
+
+        <!-- Tags & Quick Export Strip -->
+        <div class="preview-meta-strip">
+          <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;" id="prevTagsWrap"></div>
+          <div style="display: flex; gap: 6px;">
+            <button type="button" class="btn btn-sm" id="prevExportPngBtn"><i class="ri-image-download-line"></i> PNG</button>
+            <button type="button" class="btn btn-sm" id="prevExportJsonBtn"><i class="ri-braces-line"></i> JSON</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn" data-close-modal>Close</button>
+        <button type="button" class="btn btn-primary" id="prevOpenEditorBtn">
+          <i class="ph-bold ph-paint-brush"></i> Edit in Studio
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skin Options Modal (Rename / Model / Duplicate / Delete) -->
+  <div class="modal-backdrop" id="skinOptionsModal" role="dialog" aria-modal="true" aria-labelledby="optModalTitle">
+    <div class="modal-sheet">
+      <div class="sheet-drag-zone"><div class="sheet-drag-handle"></div></div>
+      <div class="modal-header">
+        <h3 class="modal-title" id="optModalTitle"><i class="ri-sliders-horizontal"></i> Skin Actions &amp; Export</h3>
+        <button type="button" class="btn btn-icon btn-sm" data-close-modal><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="optSkinName">Skin Name</label>
+          <input type="text" id="optSkinName" class="input" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="optSkinModel">Rig Model</label>
+          <select id="optSkinModel" class="select">
+            <option value="classic">Classic (4px arms)</option>
+            <option value="slim">Slim (3px arms)</option>
+          </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px;">
+          <button type="button" class="btn" id="optExportPngBtn"><i class="ri-image-download-line"></i> Download PNG</button>
+          <button type="button" class="btn" id="optExportJsonBtn"><i class="ri-braces-line"></i> Download JSON</button>
+          <button type="button" class="btn" id="optDuplicateBtn"><i class="ri-file-copy-line"></i> Duplicate Skin</button>
+          <button type="button" class="btn btn-danger" id="optDeleteBtn"><i class="ri-delete-bin-line"></i> Delete Skin</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-close-modal>Close</button>
+        <button type="button" class="btn btn-primary" id="optSaveChangesBtn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Modal -->
+  <div class="modal-backdrop" id="libImportModal" role="dialog" aria-modal="true">
+    <div class="modal-sheet">
+      <div class="sheet-drag-zone"><div class="sheet-drag-handle"></div></div>
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="ri-upload-2-line"></i> Import PNG or JSON Skin</h3>
+        <button type="button" class="btn btn-icon btn-sm" data-close-modal><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="libFilePicker">Select .PNG or .JSON File</label>
+          <input type="file" id="libFilePicker" class="input" accept=".png,.json,image/png,application/json" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-close-modal>Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="skins.js"></script>
+  <script src="script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let currentFilter = 'all';
+      let searchQuery = '';
+      let selectedSkinId = null;
+
+      /* =========================================================
+         3D & 2D INTERACTIVE PREVIEW ENGINE FOR MODAL
+         ========================================================= */
+      let previewSkin = null;
+      let previewMode = '3d'; // '3d' or '2d'
+      let prevYaw = -0.45;
+      let prevPitch = 0.2;
+      let prevZoom = 1.05;
+      let prevWalk = true;
+      let prevOverlay = true;
+      let prevWalkPhase = 0;
+
+      const prevTexCanvas = document.createElement('canvas');
+      prevTexCanvas.width = 64;
+      prevTexCanvas.height = 64;
+      const prevTexCtx = prevTexCanvas.getContext('2d');
+      prevTexCtx.imageSmoothingEnabled = false;
+
+      const modal3dCanvas = document.getElementById('modal3dViewport');
+      const modal3dCtx = modal3dCanvas.getContext('2d');
+      const modal2dCanvas = document.getElementById('modal2dViewport');
+      const modal2dCtx = modal2dCanvas.getContext('2d');
+      modal2dCtx.imageSmoothingEnabled = false;
+
+      function renderPreview2D() {
+        modal2dCtx.clearRect(0, 0, 256, 256);
+        modal2dCtx.drawImage(prevTexCanvas, 0, 0, 256, 256);
+        // Subtle 64x64 pixel gridlines
+        modal2dCtx.strokeStyle = 'rgba(142, 142, 147, 0.22)';
+        modal2dCtx.lineWidth = 1;
+        modal2dCtx.beginPath();
+        for (let i = 1; i < 64; i++) {
+          const p = i * 4 + 0.5;
+          modal2dCtx.moveTo(p, 0);
+          modal2dCtx.lineTo(p, 256);
+          modal2dCtx.moveTo(0, p);
+          modal2dCtx.lineTo(256, p);
+        }
+        modal2dCtx.stroke();
+      }
+
+      function setPreviewMode(mode) {
+        previewMode = mode;
+        document.getElementById('switchTo3dBtn').classList.toggle('active', mode === '3d');
+        document.getElementById('switchTo2dBtn').classList.toggle('active', mode === '2d');
+
+        modal3dCanvas.style.display = mode === '3d' ? 'block' : 'none';
+        modal2dCanvas.style.display = mode === '2d' ? 'block' : 'none';
+        document.getElementById('prev3dControls').style.display = mode === '3d' ? 'flex' : 'none';
+        document.getElementById('prevWalkBtn').style.display = mode === '3d' ? 'inline-flex' : 'none';
+        document.getElementById('prevOverlayBtn').style.display = mode === '3d' ? 'inline-flex' : 'none';
+
+        document.getElementById('previewModalSub').textContent =
+          mode === '3d'
+            ? 'Drag to rotate 360° · Scroll or slide to zoom'
+            : '64×64 flat UV skin texture map';
+
+        if (mode === '2d') renderPreview2D();
+      }
+
+      function openSkinPreviewModal(skinId) {
+        const skin = SkinStudio.getSkinById(skinId);
+        if (!skin) return;
+        previewSkin = skin;
+
+        document.getElementById('previewModalTitle').textContent = skin.name;
+        document.getElementById('prevTagsWrap').innerHTML = `
+          <span class="badge ${skin.model === 'slim' ? 'badge-amber' : 'badge-green'}">
+            ${skin.model === 'slim' ? 'Slim 3px' : 'Classic 4px'}
+          </span>
+          ${(skin.tags || []).map((t) => `<span class="badge">${t}</span>`).join('')}
+        `;
+
+        const img = new Image();
+        img.onload = () => {
+          prevTexCtx.clearRect(0, 0, 64, 64);
+          prevTexCtx.drawImage(img, 0, 0, 64, 64);
+          renderPreview2D();
+        };
+        img.src = skin.dataUrl;
+
+        setPreviewMode('3d');
+        SkinStudio.openModal('skinPreviewModal');
+      }
+
+      // 3D Software Voxel Renderer for Preview Modal
+      function rotate3DPoint(p, rx, ry) {
+        const cosX = Math.cos(rx), sinX = Math.sin(rx);
+        const y1 = p[1] * cosX - p[2] * sinX;
+        const z1 = p[1] * sinX + p[2] * cosX;
+        const cosY = Math.cos(ry), sinY = Math.sin(ry);
+        return [p[0] * cosY + z1 * sinY, y1, -p[0] * sinY + z1 * cosY];
+      }
+
+      function buildPrevBoxFaces(box) {
+        const { w, h, d, pivot, offset, swingX, uv, isOverlay } = box;
+        const inf = isOverlay ? 0.35 : 0;
+        const x0 = offset[0] - inf, x1 = offset[0] + w + inf;
+        const y0 = offset[1] - inf, y1 = offset[1] + h + inf;
+        const z0 = offset[2] - inf, z1 = offset[2] + d + inf;
+
+        const rawVerts = [
+          [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1],
+          [x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0]
+        ];
+
+        const cosS = Math.cos(swingX || 0), sinS = Math.sin(swingX || 0);
+        const worldVerts = rawVerts.map(([vx, vy, vz]) => {
+          const sy = vy * cosS - vz * sinS;
+          const sz = vy * sinS + vz * cosS;
+          return rotate3DPoint([vx + pivot[0], sy + pivot[1], sz + pivot[2]], prevPitch, prevYaw);
+        });
+
+        const faceDefs = [
+          { idx: [0, 1, 2, 3], uv: uv.front, shade: 1.0 },
+          { idx: [4, 5, 6, 7], uv: uv.back,  shade: 0.85 },
+          { idx: [5, 0, 3, 6], uv: uv.right, shade: 0.92 },
+          { idx: [1, 4, 7, 2], uv: uv.left,  shade: 0.92 },
+          { idx: [5, 4, 1, 0], uv: uv.top,   shade: 1.05 },
+          { idx: [3, 2, 7, 6], uv: uv.bottom,shade: 0.78 }
+        ];
+
+        return faceDefs.map((f) => {
+          const pts = f.idx.map((i) => worldVerts[i]);
+          const ax = pts[1][0] - pts[0][0], ay = pts[1][1] - pts[0][1];
+          const bx = pts[2][0] - pts[0][0], by = pts[2][1] - pts[0][1];
+          const crossZ = ax * by - ay * bx;
+          const avgZ = (pts[0][2] + pts[1][2] + pts[2][2] + pts[3][2]) / 4;
+          return { pts, uv: f.uv, shade: f.shade, visible: crossZ > 0, avgZ, isOverlay };
+        });
+      }
+
+      function drawPrevTexturedQuad(ctx, pts2d, uvRect, shade) {
+        const [ux, uy, uw, uh] = uvRect;
+        if (uw <= 0 || uh <= 0) return;
+
+        const tris = [
+          { p: [pts2d[0], pts2d[1], pts2d[2]], t: [[ux, uy], [ux + uw, uy], [ux + uw, uy + uh]] },
+          { p: [pts2d[0], pts2d[2], pts2d[3]], t: [[ux, uy], [ux + uw, uy + uh], [ux, uy + uh]] }
+        ];
+
+        tris.forEach(({ p, t }) => {
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(p[0][0], p[0][1]);
+          ctx.lineTo(p[1][0], p[1][1]);
+          ctx.lineTo(p[2][0], p[2][1]);
+          ctx.closePath();
+          ctx.clip();
+
+          const x0 = t[0][0], y0 = t[0][1], x1 = t[1][0], y1 = t[1][1], x2 = t[2][0], y2 = t[2][1];
+          const u0 = p[0][0], v0 = p[0][1], u1 = p[1][0], v1 = p[1][1], u2 = p[2][0], v2 = p[2][1];
+          const det = (x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0);
+          if (Math.abs(det) < 1e-5) { ctx.restore(); return; }
+
+          const a = ((u1 - u0) * (y2 - y0) - (u2 - u0) * (y1 - y0)) / det;
+          const b = ((v1 - v0) * (y2 - y0) - (v2 - v0) * (y1 - y0)) / det;
+          const c = ((x1 - x0) * (u2 - u0) - (x2 - x0) * (u1 - u0)) / det;
+          const d = ((x1 - x0) * (v2 - v0) - (x2 - x0) * (v1 - v0)) / det;
+          const e = u0 - a * x0 - c * y0;
+          const f = v0 - b * x0 - d * y0;
+
+          ctx.transform(a, b, c, d, e, f);
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(prevTexCanvas, 0, 0);
+
+          if (shade < 1) {
+            ctx.fillStyle = `rgba(0, 0, 0, ${(1 - shade) * 0.7})`;
+            ctx.fillRect(ux, uy, uw, uh);
+          }
+          ctx.restore();
+        });
+      }
+
+      function animatePreview3D() {
+        const modalOpen = document.getElementById('skinPreviewModal').classList.contains('open');
+        if (modalOpen && previewMode === '3d' && previewSkin) {
+          const w = modal3dCanvas.width;
+          const h = modal3dCanvas.height;
+          modal3dCtx.clearRect(0, 0, w, h);
+
+          if (prevWalk) prevWalkPhase += 0.045;
+          const swing = prevWalk ? Math.sin(prevWalkPhase) * 0.42 : 0;
+          const armW = previewSkin.model === 'slim' ? 3 : 4;
+          const parts = [];
+
+          // Head + Hat
+          parts.push({
+            w: 8, h: 8, d: 8, pivot: [0, -8, 0], offset: [-4, -8, -4], swingX: 0, isOverlay: false,
+            uv: { top: [8, 0, 8, 8], bottom: [16, 0, 8, 8], right: [0, 8, 8, 8], front: [8, 8, 8, 8], left: [16, 8, 8, 8], back: [24, 8, 8, 8] }
+          });
+          if (prevOverlay) {
+            parts.push({
+              w: 8, h: 8, d: 8, pivot: [0, -8, 0], offset: [-4, -8, -4], swingX: 0, isOverlay: true,
+              uv: { top: [40, 0, 8, 8], bottom: [48, 0, 8, 8], right: [32, 8, 8, 8], front: [40, 8, 8, 8], left: [48, 8, 8, 8], back: [56, 8, 8, 8] }
+            });
+          }
+
+          // Torso + Jacket
+          parts.push({
+            w: 8, h: 12, d: 4, pivot: [0, -8, 0], offset: [-4, 0, -2], swingX: 0, isOverlay: false,
+            uv: { top: [20, 16, 8, 4], bottom: [28, 16, 8, 4], right: [16, 20, 4, 12], front: [20, 20, 8, 12], left: [28, 20, 4, 12], back: [32, 20, 8, 12] }
+          });
+          if (prevOverlay) {
+            parts.push({
+              w: 8, h: 12, d: 4, pivot: [0, -8, 0], offset: [-4, 0, -2], swingX: 0, isOverlay: true,
+              uv: { top: [20, 32, 8, 4], bottom: [28, 32, 8, 4], right: [16, 36, 4, 12], front: [20, 36, 8, 12], left: [28, 36, 4, 12], back: [32, 36, 8, 12] }
+            });
+          }
+
+          // Right Arm + Sleeve
+          parts.push({
+            w: armW, h: 12, d: 4, pivot: [-4 - armW, -7, 0], offset: [0, -1, -2], swingX: -swing, isOverlay: false,
+            uv: { top: [44, 16, armW, 4], bottom: [44 + armW, 16, armW, 4], right: [40, 20, 4, 12], front: [44, 20, armW, 12], left: [44 + armW, 20, 4, 12], back: [48 + armW, 20, armW, 12] }
+          });
+          if (prevOverlay) {
+            parts.push({
+              w: armW, h: 12, d: 4, pivot: [-4 - armW, -7, 0], offset: [0, -1, -2], swingX: -swing, isOverlay: true,
+              uv: { top: [44, 32, armW, 4], bottom: [44 + armW, 32, armW, 4], right: [40, 36, 4, 12], front: [44, 36, armW, 12], left: [44 + armW, 36, 4, 12], back: [48 + armW, 36, armW, 12] }
+            });
+          }
+
+          // Left Arm + Sleeve
+          parts.push({
+            w: armW, h: 12, d: 4, pivot: [4, -7, 0], offset: [0, -1, -2], swingX: swing, isOverlay: false,
+            uv: { top: [36, 48, armW, 4], bottom: [36 + armW, 48, armW, 4], right: [32, 52, 4, 12], front: [36, 52, armW, 12], left: [36 + armW, 52, 4, 12], back: [40 + armW, 52, armW, 12] }
+          });
+          if (prevOverlay) {
+            parts.push({
+              w: armW, h: 12, d: 4, pivot: [4, -7, 0], offset: [0, -1, -2], swingX: swing, isOverlay: true,
+              uv: { top: [52, 48, armW, 4], bottom: [52 + armW, 48, armW, 4], right: [48, 52, 4, 12], front: [52, 52, armW, 12], left: [52 + armW, 52, 4, 12], back: [56 + armW, 52, armW, 12] }
+            });
+          }
+
+          // Right Leg + Pants
+          parts.push({
+            w: 4, h: 12, d: 4, pivot: [-4, 4, 0], offset: [0, 0, -2], swingX: swing, isOverlay: false,
+            uv: { top: [4, 16, 4, 4], bottom: [8, 16, 4, 4], right: [0, 20, 4, 12], front: [4, 20, 4, 12], left: [8, 20, 4, 12], back: [12, 20, 4, 12] }
+          });
+          if (prevOverlay) {
+            parts.push({
+              w: 4, h: 12, d: 4, pivot: [-4, 4, 0], offset: [0, 0, -2], swingX: swing, isOverlay: true,
+              uv: { top: [4, 32, 4, 4], bottom: [8, 32, 4, 4], right: [0, 36, 4, 12], front: [4, 36, 4, 12], left: [8, 36, 4, 12], back: [12, 36, 4, 12] }
+            });
+          }
+
+          // Left Leg + Pants
+          parts.push({
+            w: 4, h: 12, d: 4, pivot: [0, 4, 0], offset: [0, 0, -2], swingX: -swing, isOverlay: false,
+            uv: { top: [20, 48, 4, 4], bottom: [24, 48, 4, 4], right: [16, 52, 4, 12], front: [20, 52, 4, 12], left: [24, 52, 4, 12], back: [28, 52, 4, 12] }
+          });
+          if (prevOverlay) {
+            parts.push({
+              w: 4, h: 12, d: 4, pivot: [0, 4, 0], offset: [0, 0, -2], swingX: -swing, isOverlay: true,
+              uv: { top: [4, 48, 4, 4], bottom: [8, 48, 4, 4], right: [0, 52, 4, 12], front: [4, 52, 4, 12], left: [8, 52, 4, 12], back: [12, 52, 4, 12] }
+            });
+          }
+
+          let faces = [];
+          parts.forEach((box) => {
+            buildPrevBoxFaces(box).forEach((f) => {
+              if (f.visible || f.isOverlay) faces.push(f);
+            });
+          });
+          faces.sort((a, b) => a.avgZ - b.avgZ);
+
+          const scale = 8.1 * prevZoom;
+          const cx = w / 2;
+          const cy = h / 2 + 5;
+          faces.forEach((face) => {
+            const pts2d = face.pts.map(([x, y]) => [cx + x * scale, cy + y * scale]);
+            drawPrevTexturedQuad(modal3dCtx, pts2d, face.uv, face.shade);
+          });
+        }
+        requestAnimationFrame(animatePreview3D);
+      }
+
+      // 3D Orbit Drag & Zoom inside Preview Modal
+      let prevRotating = false;
+      let prevLastX = 0, prevLastY = 0;
+
+      modal3dCanvas.addEventListener('mousedown', (e) => {
+        prevRotating = true;
+        prevLastX = e.clientX;
+        prevLastY = e.clientY;
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!prevRotating) return;
+        prevYaw += (e.clientX - prevLastX) * 0.012;
+        prevPitch = Math.max(-1.2, Math.min(1.2, prevPitch + (e.clientY - prevLastY) * 0.012));
+        prevLastX = e.clientX;
+        prevLastY = e.clientY;
+      });
+      window.addEventListener('mouseup', () => { prevRotating = false; });
+
+      modal3dCanvas.addEventListener('touchstart', (e) => {
+        prevRotating = true;
+        prevLastX = e.touches[0].clientX;
+        prevLastY = e.touches[0].clientY;
+      }, { passive: true });
+      modal3dCanvas.addEventListener('touchmove', (e) => {
+        if (!prevRotating) return;
+        e.preventDefault();
+        prevYaw += (e.touches[0].clientX - prevLastX) * 0.013;
+        prevPitch = Math.max(-1.2, Math.min(1.2, prevPitch + (e.touches[0].clientY - prevLastY) * 0.013));
+        prevLastX = e.touches[0].clientX;
+        prevLastY = e.touches[0].clientY;
+      }, { passive: false });
+      modal3dCanvas.addEventListener('touchend', () => { prevRotating = false; });
+
+      const prevZoomSlider = document.getElementById('prevZoomSlider');
+      prevZoomSlider.addEventListener('input', (e) => { prevZoom = parseFloat(e.target.value); });
+      modal3dCanvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        prevZoom = Math.max(0.65, Math.min(1.75, prevZoom - e.deltaY * 0.001));
+        prevZoomSlider.value = prevZoom.toFixed(2);
+      }, { passive: false });
+
+      document.getElementById('prevResetCamBtn').addEventListener('click', () => {
+        prevYaw = -0.45;
+        prevPitch = 0.2;
+        prevZoom = 1.05;
+        prevZoomSlider.value = 1.05;
+      });
+
+      document.getElementById('switchTo3dBtn').addEventListener('click', () => setPreviewMode('3d'));
+      document.getElementById('switchTo2dBtn').addEventListener('click', () => setPreviewMode('2d'));
+
+      document.getElementById('prevWalkBtn').addEventListener('click', (e) => {
+        prevWalk = !prevWalk;
+        e.target.textContent = `Walk: ${prevWalk ? 'On' : 'Off'}`;
+      });
+
+      document.getElementById('prevOverlayBtn').addEventListener('click', (e) => {
+        prevOverlay = !prevOverlay;
+        e.target.textContent = `Overlay: ${prevOverlay ? 'On' : 'Off'}`;
+      });
+
+      document.getElementById('prevOpenEditorBtn').addEventListener('click', () => {
+        if (!previewSkin) return;
+        SkinStudio.setActiveSkinId(previewSkin.id);
+        window.location.href = 'skin-edit.html';
+      });
+
+      document.getElementById('prevExportPngBtn').addEventListener('click', () => {
+        if (previewSkin) SkinStudio.exportSkinPNG(previewSkin);
+      });
+
+      document.getElementById('prevExportJsonBtn').addEventListener('click', () => {
+        if (previewSkin) SkinStudio.exportSkinJSON(previewSkin);
+      });
+
+      animatePreview3D();
+
+      /* =========================================================
+         LIBRARY GRID & CARD CLICK HANDLERS
+         ========================================================= */
+      function renderLibrary() {
+        const grid = document.getElementById('libraryGrid');
+        const skins = SkinStudio.getSkins().filter((skin) => {
+          const matchesFilter = currentFilter === 'all' || skin.model === currentFilter;
+          const q = searchQuery.toLowerCase();
+          const matchesSearch =
+            !q ||
+            skin.name.toLowerCase().includes(q) ||
+            (skin.tags || []).some((t) => t.toLowerCase().includes(q));
+          return matchesFilter && matchesSearch;
+        });
+
+        grid.innerHTML = '';
+        if (skins.length === 0) {
+          grid.innerHTML = `
+            <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 44px 20px;">
+              <div style="font-size: 18px; font-weight: 700; margin-bottom: 6px;">No matching skins found</div>
+              <div class="card-subtitle" style="margin-bottom: 16px;">Import a PNG/JSON file or create a brand-new skin.</div>
+              <button type="button" class="btn btn-primary" id="emptyCreateBtn"><i class="ri-add-line"></i> Create New Skin</button>
+            </div>
+          `;
+          document.getElementById('emptyCreateBtn').addEventListener('click', () => {
+            SkinStudio.createNewSkin({ base: 'blank' });
+            window.location.href = 'skin-edit.html';
+          });
+          return;
+        }
+
+        skins.forEach((skin) => {
+          const card = document.createElement('article');
+          card.className = 'skin-card';
+          card.setAttribute('role', 'button');
+          card.setAttribute('tabindex', '0');
+          card.setAttribute('aria-label', `Preview ${skin.name} in 3D and 2D`);
+          card.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span class="badge ${skin.model === 'slim' ? 'badge-amber' : 'badge-green'}">
+                ${skin.model === 'slim' ? 'Slim 3px' : 'Classic 4px'}
+              </span>
+              <span class="card-subtitle">${SkinStudio.timeAgo(skin.updatedAt)}</span>
+            </div>
+
+            <div class="skin-card-stage">
+              <canvas class="char-preview" width="110" height="145"></canvas>
+              <img class="flat-tex-thumb" src="${skin.dataUrl}" alt="${skin.name} 64x64 texture" />
+              <span class="stage-hover-hint"><i class="fa-solid fa-cube"></i> 3D / 2D</span>
+            </div>
+
+            <div>
+              <h2 style="font-size: 16.5px; font-weight: 700; margin-bottom: 4px;">${skin.name}</h2>
+              <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                ${(skin.tags || ['64x64']).map((t) => `<span class="badge">${t}</span>`).join('')}
+              </div>
+            </div>
+
+            <div class="skin-card-actions">
+              <button type="button" class="btn btn-primary btn-sm" data-open-editor="${skin.id}">
+                <i class="ph-bold ph-paint-brush"></i> Edit in Studio
+              </button>
+              <button type="button" class="btn btn-sm" data-manage="${skin.id}" aria-label="More options">
+                <i class="ri-more-fill"></i>
+              </button>
+            </div>
+          `;
+          grid.appendChild(card);
+
+          SkinStudio.renderSkinCharacterPreview(card.querySelector('.char-preview'), skin.dataUrl, skin.model);
+
+          // Clicking card opens 3D / 2D Preview Modal (desktop modal & mobile draggable bottom sheet)
+          card.addEventListener('click', (e) => {
+            if (e.target.closest('button')) return;
+            openSkinPreviewModal(skin.id);
+          });
+
+          card.addEventListener('keydown', (e) => {
+            if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('button')) {
+              e.preventDefault();
+              openSkinPreviewModal(skin.id);
+            }
+          });
+
+          card.querySelector('[data-open-editor]').addEventListener('click', (e) => {
+            e.stopPropagation();
+            SkinStudio.setActiveSkinId(skin.id);
+            window.location.href = 'skin-edit.html';
+          });
+
+          card.querySelector('[data-manage]').addEventListener('click', (e) => {
+            e.stopPropagation();
+            openSkinManageModal(skin.id);
+          });
+        });
+      }
+
+      document.getElementById('libCreateNewBtn').addEventListener('click', () => {
+        SkinStudio.createNewSkin({ base: 'blank' });
+        window.location.href = 'skin-edit.html';
+      });
+
+      function openSkinManageModal(id) {
+        const skin = SkinStudio.getSkinById(id);
+        if (!skin) return;
+        selectedSkinId = id;
+        document.getElementById('optSkinName').value = skin.name;
+        document.getElementById('optSkinModel').value = skin.model;
+        SkinStudio.openModal('skinOptionsModal');
+      }
+
+      document.getElementById('optSaveChangesBtn').addEventListener('click', () => {
+        const skin = SkinStudio.getSkinById(selectedSkinId);
+        if (!skin) return;
+        SkinStudio.upsertSkin({
+          ...skin,
+          name: document.getElementById('optSkinName').value.trim() || skin.name,
+          model: document.getElementById('optSkinModel').value
+        });
+        SkinStudio.closeModal('skinOptionsModal');
+        SkinStudio.showToast('Skin updated');
+        renderLibrary();
+      });
+
+      document.getElementById('optExportPngBtn').addEventListener('click', () => {
+        const skin = SkinStudio.getSkinById(selectedSkinId);
+        if (skin) SkinStudio.exportSkinPNG(skin);
+      });
+
+      document.getElementById('optExportJsonBtn').addEventListener('click', () => {
+        const skin = SkinStudio.getSkinById(selectedSkinId);
+        if (skin) SkinStudio.exportSkinJSON(skin);
+      });
+
+      document.getElementById('optDuplicateBtn').addEventListener('click', () => {
+        const skin = SkinStudio.getSkinById(selectedSkinId);
+        if (!skin) return;
+        SkinStudio.upsertSkin({
+          id: null,
+          name: `${skin.name} Copy`,
+          model: skin.model,
+          tags: [...(skin.tags || []), 'Copy'],
+          dataUrl: skin.dataUrl
+        });
+        SkinStudio.closeModal('skinOptionsModal');
+        SkinStudio.showToast('Duplicated skin');
+        renderLibrary();
+      });
+
+      document.getElementById('optDeleteBtn').addEventListener('click', () => {
+        if (!selectedSkinId) return;
+        SkinStudio.deleteSkin(selectedSkinId);
+        SkinStudio.closeModal('skinOptionsModal');
+        SkinStudio.showToast('Deleted skin');
+        renderLibrary();
+      });
+
+      document.getElementById('libSearchInput').addEventListener('input', (e) => {
+        searchQuery = e.target.value;
+        renderLibrary();
+      });
+
+      document.querySelectorAll('.filter-pill').forEach((pill) => {
+        pill.addEventListener('click', () => {
+          document.querySelectorAll('.filter-pill').forEach((p) => p.classList.remove('active'));
+          pill.classList.add('active');
+          currentFilter = pill.getAttribute('data-filter');
+          renderLibrary();
+        });
+      });
+
+      document.getElementById('libImportBtn').addEventListener('click', () => SkinStudio.openModal('libImportModal'));
+
+      document.getElementById('libFilePicker').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+          const imported = await SkinStudio.parseImportedFile(file);
+          SkinStudio.upsertSkin({ ...imported, id: null });
+          SkinStudio.closeModal('libImportModal');
+          SkinStudio.showToast(`Imported "${imported.name}"`);
+          renderLibrary();
+        } catch (err) {
+          SkinStudio.showToast(err.message);
+        }
+      });
+
+      window.addEventListener('skinsupdated', renderLibrary);
+      renderLibrary();
+    });
+  </script>
+</body>
+</html>

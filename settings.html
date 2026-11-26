@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Craftvora Studio — Settings</title>
+  <script src="theme.js"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .settings-grid > .card {
+      min-width: 0;
+    }
+
+    .theme-cards-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .theme-choice-card {
+      border: 2px solid var(--border-color);
+      background: var(--bg-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px 8px;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      min-width: 0;
+      transition: all 0.18s ease;
+    }
+
+    .theme-choice-card i {
+      font-size: 22px;
+    }
+
+    .theme-choice-card:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-2px);
+    }
+
+    .theme-choice-card.active {
+      border-color: var(--accent-forest);
+      background: var(--bg-surface);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .setting-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .setting-row:first-child {
+      padding-top: 0;
+    }
+
+    .setting-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .setting-info-title {
+      font-weight: 600;
+      font-size: 14.5px;
+      margin-bottom: 2px;
+    }
+
+    .setting-info-desc {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .setting-select {
+      width: 155px;
+      flex-shrink: 0;
+    }
+
+    .backup-actions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 860px) {
+      .settings-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .card {
+        padding: 16px;
+        border-radius: 18px;
+      }
+
+      .theme-cards-row {
+        gap: 8px;
+      }
+
+      .theme-choice-card {
+        padding: 12px 6px;
+        font-size: 12px;
+        gap: 6px;
+      }
+
+      .theme-choice-card i {
+        font-size: 20px;
+      }
+
+      /* Stack select dropdown neatly below label on small phones */
+      .setting-row.stack-mobile {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+
+      .setting-row.stack-mobile .setting-select {
+        width: 100%;
+      }
+
+      .backup-actions-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a href="dashboard.html" class="brand">
+      <span class="brand-badge"><i class="fa-solid fa-cube"></i></span>
+      <span>Craftvora</span>
+    </a>
+
+    <nav class="nav-pills" aria-label="Primary">
+      <a href="dashboard.html" class="nav-pill"><i class="ri-dashboard-line"></i> Dashboard</a>
+      <a href="library.html" class="nav-pill"><i class="ri-stack-line"></i> Library</a>
+      <a href="skin-edit.html" class="nav-pill"><i class="ph-bold ph-paint-brush"></i> Skin Studio</a>
+    </nav>
+
+    <div class="topbar-actions">
+      <div class="theme-dropdown-wrap">
+        <button type="button" class="icon-circle-btn" id="themeDropdownTrigger" aria-label="Switch Theme" title="Appearance">
+          <i id="navThemeCurrentIcon" class="ri-contrast-2-line"></i>
+        </button>
+        <div class="theme-dropdown-menu" id="themeDropdownMenu" role="menu">
+          <div class="theme-menu-header">Appearance</div>
+          <button type="button" class="theme-menu-item" data-theme-option="light">
+            <span><i class="ph-bold ph-sun"></i> Light</span>
+            <i class="ri-check-line check-mark"></i>
+          </button>
+          <button type="button" class="theme-menu-item" data-theme-option="dark">
+            <span><i class="ph-bold ph-moon-stars"></i> Dark </span>
+            <i class="ri-check-line check-mark"></i>
+          </button>
+          <button type="button" class="theme-menu-item" data-theme-option="system">
+            <span><i class="ri-contrast-2-line"></i> System Default</span>
+            <i class="ri-check-line check-mark"></i>
+          </button>
+        </div>
+      </div>
+
+      <a href="settings.html" class="icon-circle-btn active" aria-label="Studio Settings" title="Settings">
+        <i class="ri-settings-3-fill"></i>
+      </a>
+    </div>
+  </header>
+
+  <main class="app-container">
+    <div class="breadcrumb">
+      <span>Craftvora</span>
+      <i class="ri-arrow-right-s-line"></i>
+      <span>Settings</span>
+    </div>
+
+    <div class="page-header">
+      <h1 class="page-title">Studio Settings</h1>
+      <div class="header-controls">
+        <button type="button" class="btn" id="resetAllSettingsBtn"><i class="ri-refresh-line"></i> Restore Defaults</button>
+      </div>
+    </div>
+
+    <section class="settings-grid">
+      <!-- Appearance & Motion -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title"><i class="ph-bold ph-palette"></i> Appearance &amp; Theme</div>
+            <div class="card-subtitle">Choose Light, Dark, or automatic OS sync</div>
+          </div>
+        </div>
+
+        <div class="theme-cards-row" style="margin-bottom: 18px;">
+          <button type="button" class="theme-choice-card" data-theme-option="light">
+            <i class="ph-bold ph-sun" style="color: #ff9f0a;"></i>
+            <span>Light</span>
+          </button>
+          <button type="button" class="theme-choice-card" data-theme-option="dark">
+            <i class="ph-bold ph-moon-stars" style="color: #30d158;"></i>
+            <span> Dark</span>
+          </button>
+          <button type="button" class="theme-choice-card" data-theme-option="system">
+            <i class="ri-contrast-2-line" style="color: #0a84ff;"></i>
+            <span>System</span>
+          </button>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-info-title">Reduce UI Animations</div>
+            <div class="setting-info-desc">Disable card transitions and entrance motion</div>
+          </div>
+          <label class="ios-switch">
+            <input type="checkbox" id="setReducedMotion" />
+            <span class="ios-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Editor Defaults -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title"><i class="ph-bold ph-sliders"></i> Editor &amp; Canvas Defaults</div>
+            <div class="card-subtitle">Applied automatically when opening Skin Studio</div>
+          </div>
+        </div>
+
+        <div class="setting-row stack-mobile">
+          <div class="setting-info">
+            <div class="setting-info-title">Default Arm Rig</div>
+            <div class="setting-info-desc">Used for newly created &amp; imported skins</div>
+          </div>
+          <select id="setDefaultModel" class="select setting-select">
+            <option value="classic">Classic (4px)</option>
+            <option value="slim">Slim (3px)</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-info-title">Show 64&times;64 Pixel Grid</div>
+            <div class="setting-info-desc">Display pixel gridlines on the 2D canvas</div>
+          </div>
+          <label class="ios-switch">
+            <input type="checkbox" id="setShowGrid" />
+            <span class="ios-slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-info-title">Show UV Body Region Guides</div>
+            <div class="setting-info-desc">Highlight Head, Torso, Arms &amp; Legs boxes</div>
+          </div>
+          <label class="ios-switch">
+            <input type="checkbox" id="setShowUvGuides" />
+            <span class="ios-slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-info-title">3D Walk Animation on Launch</div>
+            <div class="setting-info-desc">Start 3D character preview in walking pose</div>
+          </div>
+          <label class="ios-switch">
+            <input type="checkbox" id="setWalkAnim" />
+            <span class="ios-slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-info-title">Auto-Save Brush Strokes</div>
+            <div class="setting-info-desc">Persist every stroke immediately to library</div>
+          </div>
+          <label class="ios-switch">
+            <input type="checkbox" id="setAutoSave" />
+            <span class="ios-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Export & Shading -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title"><i class="ri-download-cloud-2-line"></i> Export &amp; Smart Shade</div>
+            <div class="card-subtitle">Customize downloaded filenames and shade intensity</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="setExportPrefix">Export Filename Prefix</label>
+          <input type="text" id="setExportPrefix" class="input" placeholder="e.g. craftvora" />
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" for="setShadeIntensity" style="margin: 0;">Smart Shade Brush Variation</label>
+            <span class="badge" id="shadeIntensityLabel">18%</span>
+          </div>
+          <input type="range" id="setShadeIntensity" min="5" max="45" step="1" style="width: 100%; accent-color: var(--accent-forest);" />
+        </div>
+      </div>
+
+      <!-- Library Backup & Data Management -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title"><i class="ri-database-2-line"></i> Library Backup &amp; Storage</div>
+            <div class="card-subtitle">Export or restore your entire skin collection as JSON</div>
+          </div>
+          <span class="badge badge-green" id="settingsSkinCountBadge">0 Skins</span>
+        </div>
+
+        <div class="backup-actions-grid">
+          <button type="button" class="btn" id="backupAllBtn"><i class="ri-download-2-line"></i> Backup All (.JSON)</button>
+          <button type="button" class="btn" id="restoreAllBtn"><i class="ri-upload-2-line"></i> Restore Backup</button>
+          <input type="file" id="restoreBackupInput" accept=".json,application/json" hidden />
+        </div>
+
+        <button type="button" class="btn btn-danger" id="clearAllSkinsBtn" style="width: 100%;">
+          <i class="ri-delete-bin-6-line"></i> Reset Library to Built-In Skins
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
+    <a href="dashboard.html" class="mobile-nav-item">
+      <i class="ri-dashboard-line"></i>
+      <span>Home</span>
+    </a>
+    <a href="library.html" class="mobile-nav-item">
+      <i class="ri-stack-line"></i>
+      <span>Library</span>
+    </a>
+    <a href="skin-edit.html" class="mobile-nav-item">
+      <i class="ph-bold ph-paint-brush"></i>
+      <span>Editor</span>
+    </a>
+    <a href="settings.html" class="mobile-nav-item active">
+      <i class="ri-settings-3-fill"></i>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <script src="skins.js"></script>
+  <script src="script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      function syncSettingsUI() {
+        const s = SkinStudio.getSettings();
+        document.getElementById('setReducedMotion').checked = !!s.reducedMotion;
+        document.getElementById('setDefaultModel').value = s.defaultModel || 'classic';
+        document.getElementById('setShowGrid').checked = !!s.showGridByDefault;
+        document.getElementById('setShowUvGuides').checked = !!s.showUvGuidesByDefault;
+        document.getElementById('setWalkAnim').checked = !!s.walkAnimByDefault;
+        document.getElementById('setAutoSave').checked = !!s.autoSaveEditor;
+        document.getElementById('setExportPrefix').value = s.exportPrefix || '';
+        document.getElementById('setShadeIntensity').value = s.pixelShadeIntensity || 18;
+        document.getElementById('shadeIntensityLabel').textContent = `${s.pixelShadeIntensity || 18}%`;
+        document.getElementById('settingsSkinCountBadge').textContent = `${SkinStudio.getSkins().length} Skins`;
+      }
+
+      syncSettingsUI();
+      window.addEventListener('skinsupdated', syncSettingsUI);
+
+      document.getElementById('setReducedMotion').addEventListener('change', (e) => {
+        SkinStudio.updateSettings({ reducedMotion: e.target.checked });
+        SkinStudio.showToast('Animation preference updated');
+      });
+
+      document.getElementById('setDefaultModel').addEventListener('change', (e) => {
+        SkinStudio.updateSettings({ defaultModel: e.target.value });
+        SkinStudio.showToast('Default arm rig updated');
+      });
+
+      document.getElementById('setShowGrid').addEventListener('change', (e) => {
+        SkinStudio.updateSettings({ showGridByDefault: e.target.checked });
+        SkinStudio.showToast('Default grid setting saved');
+      });
+
+      document.getElementById('setShowUvGuides').addEventListener('change', (e) => {
+        SkinStudio.updateSettings({ showUvGuidesByDefault: e.target.checked });
+        SkinStudio.showToast('UV guides default saved');
+      });
+
+      document.getElementById('setWalkAnim').addEventListener('change', (e) => {
+        SkinStudio.updateSettings({ walkAnimByDefault: e.target.checked });
+        SkinStudio.showToast('3D pose default saved');
+      });
+
+      document.getElementById('setAutoSave').addEventListener('change', (e) => {
+        SkinStudio.updateSettings({ autoSaveEditor: e.target.checked });
+        SkinStudio.showToast(`Auto-save ${e.target.checked ? 'enabled' : 'disabled'}`);
+      });
+
+      document.getElementById('setExportPrefix').addEventListener('change', (e) => {
+        SkinStudio.updateSettings({ exportPrefix: e.target.value.trim() });
+        SkinStudio.showToast('Export filename prefix saved');
+      });
+
+      document.getElementById('setShadeIntensity').addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        document.getElementById('shadeIntensityLabel').textContent = `${val}%`;
+        SkinStudio.updateSettings({ pixelShadeIntensity: val });
+      });
+
+      document.getElementById('resetAllSettingsBtn').addEventListener('click', () => {
+        SkinStudio.resetSettings();
+        ThemeManager.setTheme('system');
+        syncSettingsUI();
+        SkinStudio.showToast('All settings restored to defaults');
+      });
+
+      document.getElementById('backupAllBtn').addEventListener('click', () => {
+        const backup = {
+          format: 'craftvora-full-backup-v1',
+          exportedAt: new Date().toISOString(),
+          settings: SkinStudio.getSettings(),
+          skins: SkinStudio.getSkins()
+        };
+        const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `craftvora-library-backup-${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        SkinStudio.showToast('Full library backup downloaded');
+      });
+
+      const restoreInput = document.getElementById('restoreBackupInput');
+      document.getElementById('restoreAllBtn').addEventListener('click', () => restoreInput.click());
+      restoreInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const data = JSON.parse(ev.target.result);
+            if (Array.isArray(data.skins) && data.skins.length > 0) {
+              SkinStudio.saveSkins(data.skins);
+              if (data.settings) SkinStudio.updateSettings(data.settings);
+              syncSettingsUI();
+              SkinStudio.showToast(`Restored ${data.skins.length} skins`);
+            } else {
+              SkinStudio.showToast('Invalid backup file');
+            }
+          } catch (err) {
+            SkinStudio.showToast('Could not read backup JSON');
+          }
+        };
+        reader.readAsText(file);
+      });
+
+      document.getElementById('clearAllSkinsBtn').addEventListener('click', async () => {
+        localStorage.removeItem('craftvora_skins_v3');
+        localStorage.removeItem('craftvora_active_skin_id');
+        await SkinStudio.syncBuiltInSkins();
+        syncSettingsUI();
+        SkinStudio.showToast('Library reset to built-in skins');
+      });
+    });
+  </script>
+</body>
+</html>
